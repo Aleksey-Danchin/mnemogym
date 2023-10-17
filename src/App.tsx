@@ -1,4 +1,4 @@
-import { FC, useState } from "react";
+import { FC, useEffect, useState } from "react";
 
 export const getShuffled = <T,>(items: T[]) => {
 	const result = [] as T[];
@@ -37,22 +37,30 @@ export const delay = (n: number) =>
 
 export const App: FC = () => {
 	const [digit, setDigit] = useState(() => getRandomBetween(0, 9));
+	const [statistic, setStatistic] = useState(() => [
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	]);
 
 	const [mode, setMode] = useState(() =>
 		getRandomFrom(["digit", "letter"] as const)
 	);
 
-	const letters = getShuffled(base[digit]).join(" ").toUpperCase();
-
 	const [counter, setCounter] = useState(0);
 
 	const [isBlocking, setIsBlocking] = useState(false);
 
-	const clickHandler = () => {
-		setIsBlocking(true);
+	useEffect(() => {
+		if (!isBlocking) {
+			return;
+		}
 
-		delay(500).then(() => {
+		const flag = setTimeout(() => {
 			setIsBlocking(false);
+
+			// setStatistic((statistic) => {
+			// 	statistic[digit]++;
+			// 	return [...statistic];
+			// });
 
 			setDigit((digit) => {
 				let nextDigit = digit;
@@ -67,8 +75,30 @@ export const App: FC = () => {
 			setMode(() => getRandomFrom(["digit", "letter"] as const));
 
 			setCounter((x) => x + 1);
-		});
-	};
+
+			setStatistic((statistic) => {
+				statistic = [...statistic];
+				statistic[digit]++;
+				return statistic;
+			});
+		}, 500);
+
+		return () => {
+			clearTimeout(flag);
+		};
+	}, [digit, isBlocking]);
+
+	const content = (() => {
+		if (isBlocking) {
+			return `${digit} ${base[digit].join(" ").toUpperCase()}`;
+		}
+
+		if (mode === "digit") {
+			return digit.toString();
+		}
+
+		return getShuffled(base[digit]).join(" ").toUpperCase();
+	})();
 
 	return (
 		<div className="w-screen h-screen overflow-hidden flex justify-center items-center">
@@ -76,17 +106,18 @@ export const App: FC = () => {
 				<button
 					disabled={isBlocking}
 					className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-10 py-5 mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 w-full"
-					onClick={clickHandler}
+					onClick={() => {
+						setIsBlocking(true);
+					}}
 				>
-					{mode === "digit" &&
-						`${digit.toString()} ${
-							isBlocking ? `(${letters})` : ""
-						}`}
-
-					{mode === "letter" &&
-						`${letters} ${isBlocking ? `(${digit})` : ""}`}
+					{content}
 				</button>
 				<p>Итого: {counter}</p>
+				{statistic.map((value, index) => (
+					<p key={index}>
+						{index}: {value} раз
+					</p>
+				))}
 			</div>
 		</div>
 	);
