@@ -36,10 +36,23 @@ export const delay = (n: number) =>
 	new Promise((resolve) => setTimeout(resolve, n));
 
 export const App: FC = () => {
+	const [statistic, setStatistic] = useState(
+		() =>
+			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0] as [
+				number,
+				number,
+				number,
+				number,
+				number,
+				number,
+				number,
+				number,
+				number,
+				number
+			]
+	);
+
 	const [digit, setDigit] = useState(() => getRandomBetween(0, 9));
-	const [statistic, setStatistic] = useState(() => [
-		0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	]);
 
 	const [mode, setMode] = useState(() =>
 		getRandomFrom(["digit", "letter"] as const)
@@ -55,22 +68,7 @@ export const App: FC = () => {
 		}
 
 		const flag = setTimeout(() => {
-			setIsBlocking(false);
-
-			// setStatistic((statistic) => {
-			// 	statistic[digit]++;
-			// 	return [...statistic];
-			// });
-
-			setDigit((digit) => {
-				let nextDigit = digit;
-
-				while (nextDigit === digit) {
-					nextDigit = getRandomBetween(0, 9);
-				}
-
-				return nextDigit;
-			});
+			setDigit(() => getRandomBetween(0, 9));
 
 			setMode(() => getRandomFrom(["digit", "letter"] as const));
 
@@ -81,12 +79,14 @@ export const App: FC = () => {
 				statistic[digit]++;
 				return statistic;
 			});
+
+			setIsBlocking(false);
 		}, 500);
 
 		return () => {
 			clearTimeout(flag);
 		};
-	}, [digit, isBlocking]);
+	}, [digit, isBlocking, statistic]);
 
 	const content = (() => {
 		if (isBlocking) {
