@@ -1,39 +1,6 @@
 import { FC, useEffect, useState } from "react";
-
-export const getShuffled = <T,>(items: T[]) => {
-	const result = [] as T[];
-
-	items = items.slice();
-	while (items.length) {
-		const index = getRandomBetween(0, items.length - 1);
-		const item = items.splice(index, 1)[0];
-		result.push(item);
-	}
-
-	return result;
-};
-
-export const getRandomBetween = (min: number, max: number) =>
-	min + Math.floor(Math.random() * (max - min + 1));
-
-export const getRandomFrom = <T,>(items: T[]) =>
-	items[getRandomBetween(0, items.length - 1)];
-
-export const base = [
-	["н", "м"],
-	["г", "ж"],
-	["д", "т"],
-	["к", "х"],
-	["ч", "щ"],
-	["п", "б"],
-	["ш", "л"],
-	["с", "з"],
-	["в", "ф"],
-	["р", "ц"],
-];
-
-export const delay = (n: number) =>
-	new Promise((resolve) => setTimeout(resolve, n));
+import { base, getRandomBetween, getRandomFrom, getShuffled } from "./util";
+import { useEnterHandler } from "./hooks/useEnterHandler";
 
 export const App: FC = () => {
 	const [statistic, setStatistic] = useState(
@@ -68,7 +35,7 @@ export const App: FC = () => {
 		}
 
 		const flag = setTimeout(() => {
-			setDigit(() => getRandomBetween(0, 9));
+			setDigit(() => getRandomBetween(0, 9, [digit]));
 
 			setMode(() => getRandomFrom(["digit", "letter"] as const));
 
@@ -87,6 +54,11 @@ export const App: FC = () => {
 			clearTimeout(flag);
 		};
 	}, [digit, isBlocking, statistic]);
+
+	useEnterHandler({
+		enabled: !isBlocking,
+		handler: () => setIsBlocking(true),
+	});
 
 	const content = (() => {
 		if (isBlocking) {
